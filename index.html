@@ -384,7 +384,8 @@
 
             <!-- Name Input Field -->
             <div style="margin-bottom: 20px;">
-                <input type="text" id="userName" placeholder="Enter your name" style="padding: 12px 20px; border-radius: 25px; border: 2px solid #e2e8f0; font-size: 1rem; width: 80%; max-width: 300px; text-align: center; font-family: 'Poppins', sans-serif; outline: none; transition: border-color 0.3s ease;">
+                <input type="text" id="userName" placeholder="Enter your name"
+                    style="padding: 12px 20px; border-radius: 25px; border: 2px solid #e2e8f0; font-size: 1rem; width: 80%; max-width: 300px; text-align: center; font-family: 'Poppins', sans-serif; outline: none; transition: border-color 0.3s ease;">
             </div>
 
             <button class="btn" onclick="proceedToVote()">Proceed to Vote</button>
@@ -452,112 +453,90 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-        // Setup Firebase Environment Variables
-        const appId = 'farewell-voting-app';
-        
-        // TODO: Paste your Firebase config here!
-        const firebaseConfig = {
-            /* 
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-            */
-        };
+        // TODO: Paste your Supabase URL and Anon Key here!
+        const supabaseUrl = 'https://toumsirfqtvdzdrnhncw.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvdW1zaXJmcXR2ZHpkcm5obmN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NDQyMjksImV4cCI6MjEwNTIyMDIyOX0.7lcrL4AOVR4MeWJjybb-5wmzGoey3qHHfvc1_or9pG4';
 
-        let app, auth, db, votesRef;
+        let supabase;
         try {
-            if (Object.keys(firebaseConfig).length === 0) throw new Error("Empty Firebase config");
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
+            if (supabaseUrl === 'YOUR_SUPABASE_URL') throw new Error("Missing Supabase credentials");
+            supabase = createClient(supabaseUrl, supabaseAnonKey);
         } catch (e) {
-            console.warn("Firebase not configured. Voting will be disabled.", e);
+            console.warn("Supabase not configured. Voting will be disabled.", e);
         }
 
-        // Check if user has already voted using localStorage
         const previousVote = localStorage.getItem('farewellVote');
 
-        // UI State Management Setup
-        const initializeUI = async () => {
-            if (previousVote) {
-                // Already voted! Skip to results
-                document.getElementById('voteStatusText').innerText = `You already voted for ${previousVote}. Here are the live results!`;
-                showPage(3);
-            } else {
-                // First time voting
-                showPage(1);
-            }
-
-            // Authenticate user to access Firestore
-            if (!auth || !db) return; // Skip Firebase logic if not initialized
-            const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-            try {
-                if (token) {
-                    await signInWithCustomToken(auth, token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth error:", error);
+        const fetchAndRenderVotes = async () => {
+            if (!supabase) return;
+            const { data, error } = await supabase.from('activity_votes').select('*');
+            if (error) {
+                console.error("Error fetching votes:", error);
                 return;
             }
 
-            // Reference strictly formatted public collection
-            votesRef = collection(db, 'artifacts', appId, 'public', 'data', 'activity_votes');
+            let bowlingTotal = 0;
+            let videokeTotal = 0;
+            let bowlingNames = [];
+            let videokeNames = [];
 
-            onSnapshot(votesRef, (snapshot) => {
-                let bowlingTotal = 0;
-                let videokeTotal = 0;
-                let bowlingNames = [];
-                let videokeNames = [];
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.activity === 'Bowling') {
-                        bowlingTotal++;
-                        if (data.name) bowlingNames.push(data.name);
-                    }
-                    if (data.activity === 'Videoke') {
-                        videokeTotal++;
-                        if (data.name) videokeNames.push(data.name);
-                    }
-                });
-
-                // Update UI
-                document.getElementById('countBowling').innerText = bowlingTotal;
-                document.getElementById('countVideoke').innerText = videokeTotal;
-                
-                document.getElementById('listBowling').innerHTML = bowlingNames.length > 0 ? bowlingNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
-                document.getElementById('listVideoke').innerHTML = videokeNames.length > 0 ? videokeNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
-            }, (error) => {
-                console.error("Error listening to votes: ", error);
+            data.forEach(vote => {
+                if (vote.activity === 'Bowling') {
+                    bowlingTotal++;
+                    if (vote.name) bowlingNames.push(vote.name);
+                }
+                if (vote.activity === 'Videoke') {
+                    videokeTotal++;
+                    if (vote.name) videokeNames.push(vote.name);
+                }
             });
+
+            document.getElementById('countBowling').innerText = bowlingTotal;
+            document.getElementById('countVideoke').innerText = videokeTotal;
+
+            document.getElementById('listBowling').innerHTML = bowlingNames.length > 0 ? bowlingNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
+            document.getElementById('listVideoke').innerHTML = videokeNames.length > 0 ? videokeNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
+        };
+
+        const initializeUI = async () => {
+            if (previousVote) {
+                document.getElementById('voteStatusText').innerText = `You already voted for ${previousVote}. Here are the live results!`;
+                showPage(3);
+            } else {
+                showPage(1);
+            }
+
+            if (!supabase) return;
+
+            // Initial fetch
+            await fetchAndRenderVotes();
+
+            // Subscribe to real-time changes
+            supabase
+                .channel('public:activity_votes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'activity_votes' }, payload => {
+                    fetchAndRenderVotes();
+                })
+                .subscribe();
         };
         initializeUI();
 
-        // Expose write function to global scope for button click
-        window.castVoteToFirebase = async (activity) => {
-            if (!auth || !auth.currentUser || !votesRef) {
-                console.error("Not authenticated or reference missing.");
+        window.castVoteToBackend = async (activity) => {
+            if (!supabase) {
+                console.error("Supabase client not initialized.");
                 return false;
             }
 
             try {
                 const userName = localStorage.getItem('farewellUserName') || 'Anonymous';
-                await addDoc(votesRef, {
-                    activity: activity,
-                    name: userName,
-                    timestamp: Date.now(),
-                    userId: auth.currentUser.uid
-                });
-                // Mark locally to prevent resubmission
+                const { error } = await supabase.from('activity_votes').insert([
+                    { activity: activity, name: userName }
+                ]);
+
+                if (error) throw error;
+
                 localStorage.setItem('farewellVote', activity);
                 return true;
             } catch (error) {
@@ -612,9 +591,9 @@
             btn.disabled = true;
             btn.innerText = "Submitting...";
 
-            // Call the globally exposed Firebase write function
-            if (window.castVoteToFirebase) {
-                const success = await window.castVoteToFirebase(selectedOption);
+            // Call the globally exposed backend write function
+            if (window.castVoteToBackend) {
+                const success = await window.castVoteToBackend(selectedOption);
                 if (!success) {
                     btn.disabled = false;
                     btn.innerText = `Submit Vote for ${selectedOption}`;
