@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farewell Get-Together</title>
+
+    <!-- Fonts: Poppins for body, Dancing Script for cursive elegance -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --primary-pink: #d94a7a;
+            --soft-pink: #fce4ec;
+            --navy-blue: #1c2b4d;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url('restaurant_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--navy-blue);
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        .page {
+            display: none;
+            width: 100%;
+            max-width: 650px;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(217, 74, 122, 0.15);
+            position: relative;
+        }
+
+        .polaroid-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .polaroid {
+            background: white;
+            padding: 10px 10px 25px 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            width: 180px;
+            position: relative;
+            transform: rotate(-3deg);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .polaroid:hover {
+            transform: rotate(0deg) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .polaroid img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+
+        .washi-tape {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%) rotate(2deg);
+            width: 90px;
+            height: 25px;
+            background-color: #ffb6c1;
+            background-image: radial-gradient(white 15%, transparent 16%), radial-gradient(white 15%, transparent 16%);
+            background-size: 12px 12px;
+            background-position: 0 0, 6px 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+            opacity: 0.9;
+        }
+
+        .cursive {
+            font-family: 'Dancing Script', cursive;
+            color: var(--primary-pink);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: white;
+            background: var(--primary-pink);
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+        }
+
+        h3 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .date-box {
+            background: #f8eaf0;
+            border: 2px dashed #ffb6c1;
+            padding: 15px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-bottom: 30px;
+            font-weight: 600;
+            color: var(--navy-blue);
+        }
+
+        .btn {
+            border: none;
+            border-radius: 50px;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--navy-blue);
+            color: white;
+            box-shadow: 0 10px 20px rgba(28, 43, 77, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(28, 43, 77, 0.3);
+            background: #2a3d6a;
+        }
+
+        .btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .voting-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .vote-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 25px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vote-card:hover {
+            border-color: #ffb6c1;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .vote-card.selected {
+            border-color: var(--primary-pink);
+            background: #fff5f8;
+            box-shadow: 0 10px 20px rgba(217, 74, 122, 0.15);
+        }
+
+        .vote-card.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: var(--primary-pink);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .vote-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .vote-title {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .vote-desc {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+        }
+
+        .or-divider {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--primary-pink);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            z-index: 10;
+            border: 4px solid var(--glass-bg);
+        }
+
+        .grid-container {
+            position: relative;
+        }
+
+        .scoreboard {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .score-row:last-child {
+            border-bottom: none;
+        }
+
+        .score-count {
+            background: var(--primary-pink);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 1.5rem;
+        }
+
+        .attendee-list {
+            font-size: 0.9rem;
+            color: #4a5568;
+            padding: 10px 15px;
+            text-align: left;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-top: -5px;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+
+        .attendee-list span {
+            display: inline-block;
+            background: #e2e8f0;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin: 3px;
+            font-size: 0.8rem;
+        }
+
+        .footer-note {
+            font-size: 0.8rem;
+            color: var(--primary-pink);
+            font-weight: 600;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 600px) {
+            .voting-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .or-divider {
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            .card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page" id="page1">
+        <div class="card">
+
+            <!-- Polaroid Photo -->
+            <div class="polaroid-container">
+                <div class="polaroid">
+                    <div class="washi-tape"></div>
+                    <img src="kim.png" alt="Our Dear Colleague"
+                        onerror="this.src='https://placehold.co/300x400/fce4ec/d94a7a?text=Photo'">
+                </div>
+            </div>
+
+            <h1 class="cursive">You will be missed!</h1>
+            <h2>Farewell Get-Together</h2>
+            <h3 class="cursive" style="color: var(--navy-blue); font-size: 2rem; margin-top: -10px;">for our dear
+                Colleague</h3>
+
+            <p>As we celebrate the last day of our dear colleague, let's take this opportunity to thank her for the
+                wonderful memories, hard work, and friendship she has shared with us through the years.</p>
+            <p style="font-style: italic; color: var(--primary-pink); font-weight: 500;">Let's make her last day with
+                the team a memorable one!</p>
+
+            <div class="date-box">
+                📅 DATE: <br>
+                <span style="font-size: 1.2rem;">OCTOBER 3, 2026</span>
+            </div>
+            <br>
+
+            <!-- Name Input Field -->
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="userName" placeholder="Enter your name" style="padding: 12px 20px; border-radius: 25px; border: 2px solid #e2e8f0; font-size: 1rem; width: 80%; max-width: 300px; text-align: center; font-family: 'Poppins', sans-serif; outline: none; transition: border-color 0.3s ease;">
+            </div>
+
+            <button class="btn" onclick="proceedToVote()">Proceed to Vote</button>
+        </div>
+    </div>
+
+    <div class="page" id="page2">
+        <div class="card">
+            <h2 style="background: var(--navy-blue);">Activity Options</h2>
+            <p style="font-weight: 500;">Please vote for your preferred activity:</p>
+
+            <div class="grid-container">
+                <div class="voting-grid">
+                    <!-- Option 1: Bowling -->
+                    <div class="vote-card" id="card-bowling" onclick="selectActivity('Bowling')">
+                        <div class="vote-icon">🎳</div>
+                        <div class="cursive vote-title">Bowling</div>
+                        <p class="vote-desc">Enjoy a fun and friendly bowling session with the team.</p>
+                    </div>
+
+                    <!-- Option 2: Videoke -->
+                    <div class="vote-card" id="card-videoke" onclick="selectActivity('Videoke')">
+                        <div class="vote-icon">🎤</div>
+                        <div class="cursive vote-title">Videoke</div>
+                        <p class="vote-desc">Sing your favorite songs and create memorable moments together.</p>
+                    </div>
+                </div>
+                <div class="or-divider">OR</div>
+            </div>
+
+            <button class="btn" id="submitBtn" onclick="submitVote()" disabled>Cast Your Vote</button>
+        </div>
+    </div>
+
+    <div class="page" id="page3">
+        <div class="card">
+            <h1 class="cursive" style="font-size: 4rem;">Thank you!</h1>
+
+            <p id="voteStatusText"
+                style="font-size: 1.1rem; font-weight: 600; color: var(--primary-pink); margin-top: 10px;">
+                Loading real-time results...
+            </p>
+
+            <div class="scoreboard">
+                <div class="score-row">
+                    <span>🎳 Bowling</span>
+                    <span class="score-count" id="countBowling">0</span>
+                </div>
+                <div id="listBowling" class="attendee-list"></div>
+
+                <div class="score-row">
+                    <span>🎤 Videoke</span>
+                    <span class="score-count" id="countVideoke">0</span>
+                </div>
+                <div id="listVideoke" class="attendee-list"></div>
+            </div>
+
+            <p style="font-size: 0.9rem; margin-top: 20px;">Every ending is a new beginning.<br>Wishing our colleague
+                continued success and happiness in the next chapter of the journey.</p>
+
+            <div class="footer-note">
+                ❤️ WE WILL MISS YOU! GOOD LUCK AND GOD BLESS! ❤️
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Setup Firebase Environment Variables
+        const appId = 'farewell-voting-app';
+        
+        // TODO: Paste your Firebase config here!
+        const firebaseConfig = {
+            /* 
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+            */
+        };
+
+        let app, auth, db, votesRef;
+        try {
+            if (Object.keys(firebaseConfig).length === 0) throw new Error("Empty Firebase config");
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.warn("Firebase not configured. Voting will be disabled.", e);
+        }
+
+        // Check if user has already voted using localStorage
+        const previousVote = localStorage.getItem('farewellVote');
+
+        // UI State Management Setup
+        const initializeUI = async () => {
+            if (previousVote) {
+                // Already voted! Skip to results
+                document.getElementById('voteStatusText').innerText = `You already voted for ${previousVote}. Here are the live results!`;
+                showPage(3);
+            } else {
+                // First time voting
+                showPage(1);
+            }
+
+            // Authenticate user to access Firestore
+            if (!auth || !db) return; // Skip Firebase logic if not initialized
+            const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            try {
+                if (token) {
+                    await signInWithCustomToken(auth, token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+                return;
+            }
+
+            // Reference strictly formatted public collection
+            votesRef = collection(db, 'artifacts', appId, 'public', 'data', 'activity_votes');
+
+            onSnapshot(votesRef, (snapshot) => {
+                let bowlingTotal = 0;
+                let videokeTotal = 0;
+                let bowlingNames = [];
+                let videokeNames = [];
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.activity === 'Bowling') {
+                        bowlingTotal++;
+                        if (data.name) bowlingNames.push(data.name);
+                    }
+                    if (data.activity === 'Videoke') {
+                        videokeTotal++;
+                        if (data.name) videokeNames.push(data.name);
+                    }
+                });
+
+                // Update UI
+                document.getElementById('countBowling').innerText = bowlingTotal;
+                document.getElementById('countVideoke').innerText = videokeTotal;
+                
+                document.getElementById('listBowling').innerHTML = bowlingNames.length > 0 ? bowlingNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
+                document.getElementById('listVideoke').innerHTML = videokeNames.length > 0 ? videokeNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
+            }, (error) => {
+                console.error("Error listening to votes: ", error);
+            });
+        };
+        initializeUI();
+
+        // Expose write function to global scope for button click
+        window.castVoteToFirebase = async (activity) => {
+            if (!auth || !auth.currentUser || !votesRef) {
+                console.error("Not authenticated or reference missing.");
+                return false;
+            }
+
+            try {
+                const userName = localStorage.getItem('farewellUserName') || 'Anonymous';
+                await addDoc(votesRef, {
+                    activity: activity,
+                    name: userName,
+                    timestamp: Date.now(),
+                    userId: auth.currentUser.uid
+                });
+                // Mark locally to prevent resubmission
+                localStorage.setItem('farewellVote', activity);
+                return true;
+            } catch (error) {
+                console.error("Error adding vote: ", error);
+                return false;
+            }
+        };
+    </script>
+
+    <script>
+        let selectedOption = null;
+
+        function proceedToVote() {
+            const name = document.getElementById('userName').value.trim();
+            if (!name) {
+                alert("Please enter your name so we know who is attending!");
+                return;
+            }
+            localStorage.setItem('farewellUserName', name);
+            nextPage(2);
+        }
+
+        function showPage(pageNumber) {
+            document.querySelectorAll(".page").forEach(p => {
+                p.classList.remove("active");
+            });
+            document.getElementById("page" + pageNumber).classList.add("active");
+        }
+
+        function nextPage(pageNumber) {
+            showPage(pageNumber);
+        }
+
+        function selectActivity(activity) {
+            selectedOption = activity;
+
+            document.getElementById('card-bowling').classList.remove('selected');
+            document.getElementById('card-videoke').classList.remove('selected');
+
+            document.getElementById('card-' + activity.toLowerCase()).classList.add('selected');
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = false;
+            btn.innerText = `Submit Vote for ${activity}`;
+        }
+
+        async function submitVote() {
+            if (!selectedOption) return;
+
+            // Disable button to prevent double-clicks
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "Submitting...";
+
+            // Call the globally exposed Firebase write function
+            if (window.castVoteToFirebase) {
+                const success = await window.castVoteToFirebase(selectedOption);
+                if (!success) {
+                    btn.disabled = false;
+                    btn.innerText = `Submit Vote for ${selectedOption}`;
+                    alert("Failed to submit vote. Please try again.");
+                    return;
+                }
+            }
+
+            document.getElementById('voteStatusText').innerText = `You successfully voted for ${selectedOption}! Live results:`;
+
+            triggerConfetti();
+            nextPage(3);
+        }
+
+        function triggerConfetti() {
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function () {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, {
+                    particleCount,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                }));
+                confetti(Object.assign({}, defaults, {
+                    particleCount,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                }));
+            }, 250);
+        }
+    </script>
+
+</body>
+
+</html>
