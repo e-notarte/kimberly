@@ -248,25 +248,6 @@
             margin-bottom: 0;
         }
 
-        .or-divider {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--primary-pink);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-            z-index: 10;
-            border: 4px solid var(--glass-bg);
-        }
-
         .grid-container {
             position: relative;
         }
@@ -335,12 +316,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .or-divider {
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-            }
-
             h1 {
                 font-size: 3rem;
             }
@@ -389,6 +364,10 @@
             </div>
 
             <button class="btn" onclick="proceedToVote()">Proceed to Vote</button>
+            <br>
+            <button id="viewResultsBtn" class="btn"
+                style="margin-top: 15px; background: #e2e8f0; color: #4a5568; display: none; box-shadow: none;"
+                onclick="nextPage(3)">View Live Results</button>
         </div>
     </div>
 
@@ -412,8 +391,14 @@
                         <div class="cursive vote-title">Videoke</div>
                         <p class="vote-desc">Sing your favorite songs and create memorable moments together.</p>
                     </div>
+
+                    <!-- Option 3: Both -->
+                    <div class="vote-card" id="card-both" onclick="selectActivity('Both')" style="grid-column: 1 / -1;">
+                        <div class="vote-icon">🎳🎤</div>
+                        <div class="cursive vote-title">Both</div>
+                        <p class="vote-desc">Why not both? Let's do bowling and videoke!</p>
+                    </div>
                 </div>
-                <div class="or-divider">OR</div>
             </div>
 
             <button class="btn" id="submitBtn" onclick="submitVote()" disabled>Cast Your Vote</button>
@@ -441,6 +426,12 @@
                     <span class="score-count" id="countVideoke">0</span>
                 </div>
                 <div id="listVideoke" class="attendee-list"></div>
+
+                <div class="score-row">
+                    <span>🎳🎤 Both</span>
+                    <span class="score-count" id="countBoth">0</span>
+                </div>
+                <div id="listBoth" class="attendee-list"></div>
             </div>
 
             <p style="font-size: 0.9rem; margin-top: 20px;">Every ending is a new beginning.<br>Wishing our colleague
@@ -448,6 +439,13 @@
 
             <div class="footer-note">
                 ❤️ WE WILL MISS YOU! GOOD LUCK AND GOD BLESS! ❤️
+            </div>
+
+            <div style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn" style="padding: 10px 20px; font-size: 1rem; background: #a0aec0; box-shadow: none;"
+                    onclick="goBack()">Back to Home</button>
+                <span style="font-size: 0.8rem; color: #cbd5e0; cursor: pointer; text-decoration: underline;"
+                    onclick="promptClearVotes()">Admin</span>
             </div>
         </div>
     </div>
@@ -479,8 +477,10 @@
 
             let bowlingTotal = 0;
             let videokeTotal = 0;
+            let bothTotal = 0;
             let bowlingNames = [];
             let videokeNames = [];
+            let bothNames = [];
 
             data.forEach(vote => {
                 if (vote.activity === 'Bowling') {
@@ -491,18 +491,26 @@
                     videokeTotal++;
                     if (vote.name) videokeNames.push(vote.name);
                 }
+                if (vote.activity === 'Both') {
+                    bothTotal++;
+                    if (vote.name) bothNames.push(vote.name);
+                }
             });
 
             document.getElementById('countBowling').innerText = bowlingTotal;
             document.getElementById('countVideoke').innerText = videokeTotal;
+            document.getElementById('countBoth').innerText = bothTotal;
 
             document.getElementById('listBowling').innerHTML = bowlingNames.length > 0 ? bowlingNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
             document.getElementById('listVideoke').innerHTML = videokeNames.length > 0 ? videokeNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
+            document.getElementById('listBoth').innerHTML = bothNames.length > 0 ? bothNames.map(n => `<span>${n}</span>`).join('') : '<em style="color:#a0aec0">No attendees yet</em>';
         };
+        window.fetchAndRenderVotes = fetchAndRenderVotes;
 
         const initializeUI = async () => {
             if (previousVote) {
                 document.getElementById('voteStatusText').innerText = `You already voted for ${previousVote}. Here are the live results!`;
+                document.getElementById('viewResultsBtn').style.display = 'inline-block';
                 showPage(3);
             } else {
                 showPage(1);
@@ -522,6 +530,18 @@
                 .subscribe();
         };
         initializeUI();
+
+        window.clearAllVotesBackend = async () => {
+            if (!supabase) return { success: false, error: 'Not initialized' };
+            try {
+                const { error } = await supabase.from('activity_votes').delete().neq('activity', 'dummy_value');
+                if (error) throw error;
+                return { success: true };
+            } catch (error) {
+                console.error("Error clearing votes:", error);
+                return { success: false, error: error.message };
+            }
+        };
 
         window.castVoteToBackend = async (activity) => {
             if (!supabase) {
@@ -575,6 +595,7 @@
 
             document.getElementById('card-bowling').classList.remove('selected');
             document.getElementById('card-videoke').classList.remove('selected');
+            document.getElementById('card-both').classList.remove('selected');
 
             document.getElementById('card-' + activity.toLowerCase()).classList.add('selected');
 
@@ -600,12 +621,43 @@
                     alert("Failed to submit vote. Please try again.");
                     return;
                 }
+
+                // Immediately fetch and render votes so the user sees their own name instantly
+                if (window.fetchAndRenderVotes) {
+                    await window.fetchAndRenderVotes();
+                }
             }
 
             document.getElementById('voteStatusText').innerText = `You successfully voted for ${selectedOption}! Live results:`;
+            document.getElementById('viewResultsBtn').style.display = 'inline-block';
 
             triggerConfetti();
             nextPage(3);
+        }
+
+        function goBack() {
+            showPage(1);
+        }
+
+        async function promptClearVotes() {
+            const pass = prompt("Enter Admin Password:");
+            if (pass === "admin123") {
+                if (confirm("Are you sure you want to clear ALL votes? This cannot be undone.")) {
+                    if (window.clearAllVotesBackend) {
+                        const result = await window.clearAllVotesBackend();
+                        if (result.success) {
+                            alert("All votes have been cleared.");
+                            localStorage.removeItem('farewellVote');
+                            localStorage.removeItem('farewellUserName');
+                            window.location.reload();
+                        } else {
+                            alert("Failed to clear votes: " + result.error);
+                        }
+                    }
+                }
+            } else if (pass !== null) {
+                alert("Incorrect password.");
+            }
         }
 
         function triggerConfetti() {
