@@ -321,12 +321,13 @@
             padding: 10px;
         }
 
-        .gallery-item, .gallery-video {
+        .gallery-item,
+        .gallery-video {
             width: 100%;
             height: 150px;
             object-fit: cover;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
             cursor: pointer;
         }
@@ -339,10 +340,12 @@
         .gallery-grid::-webkit-scrollbar {
             width: 8px;
         }
+
         .gallery-grid::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 10px;
         }
+
         .gallery-grid::-webkit-scrollbar-thumb {
             background: #ffb6c1;
             border-radius: 10px;
@@ -402,7 +405,9 @@
 
             <button class="btn" onclick="proceedToVote()">Proceed to Vote</button>
             <br>
-            <button class="btn" style="margin-top: 15px; background: #ffb6c1; color: var(--navy-blue); box-shadow: none;" onclick="nextPage(4)">📸 View Memories</button>
+            <button class="btn"
+                style="margin-top: 15px; background: #ffb6c1; color: var(--navy-blue); box-shadow: none;"
+                onclick="nextPage(4)">📸 View Memories</button>
             <br>
             <button id="viewResultsBtn" class="btn"
                 style="margin-top: 15px; background: #e2e8f0; color: #4a5568; display: none; box-shadow: none;"
@@ -493,7 +498,7 @@
         <div class="card" style="max-width: 750px; width: 100%;">
             <h1 class="cursive">Precious Memories</h1>
             <p>A look back at the wonderful moments we shared.</p>
-            
+
             <div class="gallery-grid" id="memoryGallery">
                 <!-- Javascript will populate this -->
             </div>
@@ -746,11 +751,11 @@
         // --- Gallery Logic ---
         function loadGallery() {
             const gallery = document.getElementById('memoryGallery');
-            if(!gallery) return;
-            
+            if (!gallery) return;
+
             // To use your Cloudflare R2 links in the future, change this to your bucket's public domain.
             // Example: const baseUrl = "https://pub-xxxxxx.r2.dev/Kim%20Agnat/";
-            const baseUrl = "gallery/"; 
+            const baseUrl = "gallery/";
 
             const images = ["kim (1).jpg", "kim (2).jpg", "kim (3).jpg", "kim (4).jpg", "kim (5).jpg", "kim (6).jpg", "kim (7).jpg", "kim (8).jpg"];
             const videos = ["kim v1.mp4", "kim v2.mp4"];
@@ -772,7 +777,7 @@
                 gallery.appendChild(vid);
             });
         }
-        
+
         // Load the gallery when the script runs
         loadGallery();
     </script>
